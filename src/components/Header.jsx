@@ -1,22 +1,23 @@
-// src/components/Header.jsx
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { name: "Home", path: "/" },
-  { name: "About", path: "/about" },
+  { name: "Speakers", path: "/speakers" },
   { name: "Agenda", path: "/agenda" },
   { name: "Sponsorship", path: "/sponsorship" },
-  { name: "Contact", path: "/contact" },
+  { name: "Contact", path: "/contact" }, // Special handled below
 ];
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // detect scroll
+  // Scroll detection for nav background
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -24,6 +25,32 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Scroll to contact section if on home page
+  const scrollToContact = () => {
+    const element = document.getElementById("contact");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Handle Contact click behavior
+  const handleContactClick = () => {
+    // Close menu if open
+    setOpen(false);
+
+    if (location.pathname === "/") {
+      // Already on home, just scroll
+      scrollToContact();
+    } else {
+      // Navigate home first, then scroll after load delay
+      navigate("/", { replace: false });
+      // Wait for navigation to complete and DOM to update (adjust timeout if needed)
+      setTimeout(() => {
+        scrollToContact();
+      }, 300);
+    }
+  };
 
   return (
     <motion.nav
@@ -44,15 +71,26 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className="text-primary text-lg hover:text-black transition-colors font-semibold"
-            >
-              {link.name}
-            </Link>
-          ))}
+          {navLinks.map((link) =>
+            link.name !== "Contact" ? (
+              <Link
+                key={link.name}
+                to={link.path}
+                className="text-primary text-lg hover:text-black transition-colors font-semibold"
+                onClick={() => setOpen(false)}
+              >
+                {link.name}
+              </Link>
+            ) : (
+              <button
+                key={link.name}
+                onClick={handleContactClick}
+                className="text-primary text-lg hover:text-black transition-colors font-semibold bg-transparent border-none cursor-pointer"
+              >
+                {link.name}
+              </button>
+            )
+          )}
         </nav>
 
         {/* Register Button */}
@@ -64,7 +102,7 @@ export default function Header() {
         <button
           onClick={() => setOpen(!open)}
           aria-label={open ? "Close menu" : "Open menu"}
-          className="md:hidden text-primary text-2xl focus:outline-none"
+          className="md:hidden text-primary text-3xl focus:outline-none"
         >
           {open ? <FaTimes /> : <FaBars />}
         </button>
@@ -72,21 +110,49 @@ export default function Header() {
 
       {/* Mobile Dropdown */}
       {open && (
-        <nav className="md:hidden bg-white shadow-lg absolute left-0 right-0 top-full z-50">
-          <ul className="flex flex-col gap-4 p-4 text-primary">
-            {navLinks.map((link) => (
-              <li key={link.name}>
-                <Link
-                  to={link.path}
-                  onClick={() => setOpen(false)}
-                  className="block py-2 px-4 rounded hover:bg-gsacGold hover:text-gsacNavy transition-colors font-semibold"
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <AnimatePresence>
+          <motion.nav
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.2 }}
+            className="md:hidden  bg-white shadow-black shadow-2xl absolute  right-0 top-0 w-[90%] z-50 h-screen"
+          >
+            <div className="flex justify-end items-center px-4 py-5 border-b">
+              <button
+                onClick={() => setOpen(!open)}
+                aria-label={open ? "Close menu" : "Open menu"}
+                className="md:hidden text-primary text-3xl focus:outline-none "
+              >
+                {open ? <FaTimes /> : <FaBars />}
+              </button>
+            </div>
+            <ul className="flex flex-col text-lg gap-4 p-4 text-primary">
+              {navLinks.map((link) =>
+                link.name !== "Contact" ? (
+                  <li key={link.name}>
+                    <Link
+                      to={link.path}
+                      onClick={() => setOpen(false)}
+                      className="block py-2 px-4 rounded hover:bg-gsacGold hover:text-gsacNavy transition-colors font-semibold"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ) : (
+                  <li key={link.name}>
+                    <button
+                      onClick={handleContactClick}
+                      className="w-full text-left py-2 px-4 rounded hover:bg-gsacGold hover:text-gsacNavy transition-colors font-semibold"
+                    >
+                      {link.name}
+                    </button>
+                  </li>
+                )
+              )}
+            </ul>
+          </motion.nav>
+        </AnimatePresence>
       )}
     </motion.nav>
   );

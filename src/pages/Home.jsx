@@ -5,6 +5,7 @@ import Benefits from "../components/Home/Benefits";
 import Outcomes from "../components/Home/Outcomes";
 import KeyThemes from "../components/Home/KeyThemes";
 import ProposedFormat from "../components/Home/ProposedFormat";
+import Contact from "../components/Home/Contact";
 
 const Home = () => {
   return (
@@ -15,6 +16,7 @@ const Home = () => {
       <Outcomes />
       <KeyThemes />
       <ProposedFormat />
+      <Contact />
     </div>
   );
 };
